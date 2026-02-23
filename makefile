@@ -21,7 +21,7 @@ all: $(TARGET)
 
 # Link object files into final executable
 $(TARGET): $(OBJECTS) | $(BINDIR)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 # Compile .c files into .o files
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)

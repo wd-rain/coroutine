@@ -27,7 +27,6 @@ typedef struct task_fn
         unsigned char u8;
     } _state;
 
-    struct task_fn *_next;
     struct task_fn *_prev;
 } TaskFn;
 
@@ -40,22 +39,15 @@ typedef struct task
     TaskFn *_fn;
 } Task;
 
-/// @brief 运行任务
-/// @param task 任务对象
-static inline void os_task_run(Task *task)
-{
-    if (task->_fn)
-    {
-        task->_fn->_handler(task);
-    }
-}
 
 static inline void task_start(Task *task)
 {
 }
+
 
 void os_task_fn_init(TaskFn *fn, TaskHandlerFn handler, void *arg);
 void os_task_init(Task *task, TaskInitFn init, TaskDeInitFn deinit, TaskFn *fn);
 void task_fn_reset(TaskFn *fn);
 void os_task_reset(Task *task);
 void task_return(Task *task, void *ret);
+void task_fn_call(Task *task, TaskFn *fn, void *arg);
