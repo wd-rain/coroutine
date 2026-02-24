@@ -8,6 +8,7 @@ AsycTask(task3_handler)
     os_task_var_def_end();
 
     os_task_begin();
+
     printf("task3: call\n");
     os_task_var_init_begin();
     a = *(int *)os_arg;
@@ -35,11 +36,11 @@ AsycTask(task2_handler)
     os_task_var_init_end();
 
     a = a * 10;
-    printf("task2: call\n");
+    printf("task2: call");
     os_task_await(&task3_handler, &a);
     a = *(int *)os_res;
 
-    printf("task2: %d\n", a);
+    printf("task2: %d", a);
     os_task_return(&a);
 
     os_task_end();

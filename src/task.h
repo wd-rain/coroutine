@@ -5,7 +5,13 @@
 #endif
 
 typedef struct task Task;
+#if defined(__GNUC__)
+#define LABEL_CONCAT2(a, b) a ## b
+#define LABEL_CONCAT(a, b) LABEL_CONCAT2(a, b)
+typedef void* Lc;
+#else
 typedef unsigned short Lc;
+#endif
 typedef void (*TaskHandlerFn)(Task *task);
 typedef void (*TaskInitFn)(void);
 typedef void (*TaskDeInitFn)(void);
@@ -20,9 +26,10 @@ typedef struct task_fn
     {
         struct
         {
-            unsigned char _ended : 1;
             unsigned char _started : 1;
             unsigned char _suspend : 1;
+            unsigned char _system  : 1;
+            unsigned char _nc : 6;
         } flag;
         unsigned char u8;
     } _state;
@@ -40,9 +47,6 @@ typedef struct task
 } Task;
 
 
-static inline void task_start(Task *task)
-{
-}
 
 
 void os_task_fn_init(TaskFn *fn, TaskHandlerFn handler, void *arg);

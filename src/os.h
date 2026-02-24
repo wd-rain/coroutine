@@ -13,11 +13,19 @@ static inline void os_task_resume(Task *task) { if(task->_fn) task->_fn->_state.
 #define os_task_var_def_end();
 #define os_task_var_init_begin();   if(task->_fn->_state.flag._started == 0) {
 #define os_task_var_init_end();     task->_fn->_state.flag._started = 1; }
+#define os_task_return(ret)         task_return(task, ret); return
+#define os_res                      (task->_fn->_return)
+#define os_arg                      (task->_fn->_arg)
+#if defined(__GNUC__)
+#define os_task_begin()             do { if(task->_fn->_pc) goto *task->_fn->_pc; }while(0)
+#define os_task_end();              task->_fn->_pc = 0;  
+#define os_task_yield()             task->_fn->_pc = &&LABEL_CONCAT(OS_LABLE, __LINE__); task->_fn->_state.flag._suspend = 1; LABEL_CONCAT(OS_LABLE, __LINE__): if(task->_fn->_state.flag._suspend) return
+#define os_task_await(fn, arg)      task->_fn->_pc = &&LABEL_CONCAT(OS_LABLE, __LINE__); task_fn_call(task, fn, arg);  return; LABEL_CONCAT(OS_LABLE, __LINE__):
+#else
 #define os_task_begin();            switch (task->_fn->_pc) { case 0:
 #define os_task_end();              default: break; } task->_fn->_pc = 0;
 #define os_task_yield()             task->_fn->_pc = __LINE__; task->_fn->_state.flag._suspend = 1; case __LINE__: if(task->_fn->_state.flag._suspend) return
-#define os_task_return(ret)         task_return(task, ret); return
 #define os_task_await(fn, arg)      task->_fn->_pc = __LINE__; task_fn_call(task, fn, arg);  return; case __LINE__:
-#define os_res                      (task->_fn->_return)
-#define os_arg                      (task->_fn->_arg)
+#endif
+
 
