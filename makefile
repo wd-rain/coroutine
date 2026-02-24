@@ -2,7 +2,7 @@
 
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -I$(SRCDIR)
 LDFLAGS = test/taskMain.c
 
 # Directories
@@ -23,7 +23,7 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS) | $(BINDIR)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-# Compile .c files into .o files
+# Compile .c files into .o cfiles
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 

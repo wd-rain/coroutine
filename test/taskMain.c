@@ -1,101 +1,87 @@
-#include "../src/os.h"
-#include "stdio.h"
+#include "coroutine.h"
+#include <stdio.h>
 
-AsycTask(task3_handler)
+AsyncFn(f3)
 {
-    os_task_var_def_begin();
-    static int a;
-    os_task_var_def_end();
+    cror_var_def_begin();
+    static int x;
+    cror_var_def_end();
 
-    os_task_begin();
+    cror_begin();
+    printf("f3 begin");
+    cror_var_init_begin();
+    x = *(int*)crorArg*10;
+    cror_var_init_end();
+    
+    cror_sleep(3);
+    printf("f3 end");
+    cror_return(&x);
 
-    printf("task3: call\n");
-    os_task_var_init_begin();
-    a = *(int *)os_arg;
-    os_task_var_init_end();
-
-
-    a = a * 10;
-    printf("task3: %d\n", a);
-    os_task_return(&a);
-
-    os_task_end();
-
+    cror_end();
 }
 
-AsycTask(task2_handler)
+AsyncFn(f2)
 {
-    os_task_var_def_begin();
-    static int a;
-    os_task_var_def_end();
+    cror_var_def_begin();
+    static int x;
+    cror_var_def_end();
 
-    os_task_begin();
+    cror_begin();
+    printf("f2 begin");
+    cror_var_init_begin();
+    x = *(int*)crorArg*10;
+    cror_var_init_end();
 
-    os_task_var_init_begin();
-    a = *(int *)os_arg;
-    os_task_var_init_end();
+    cror_await(&f3, &x);
+    x = *(int*)crorRes;
+    printf("f2 end");
+    cror_return(&x);
 
-    a = a * 10;
-    printf("task2: call");
-    os_task_await(&task3_handler, &a);
-    a = *(int *)os_res;
-
-    printf("task2: %d", a);
-    os_task_return(&a);
-
-    os_task_end();
+    cror_end();
 }
 
-AsycTask(task1_handler)
+
+
+AsyncFn(f1)
 {
-    os_task_var_def_begin();
+    cror_var_def_begin();
     static int count;
-    os_task_var_def_end();
+    cror_var_def_end();
 
-    os_task_begin();
-
-    os_task_var_init_begin();
+    cror_begin();
+    cror_var_init_begin();
     count = 0;
-    os_task_var_init_end();
+    cror_var_init_end();
 
-    printf("call task1");
-    os_task_yield();
-    count++;
+    printf("f1 begin and count++ = %d", ++count);
+    cror_timeout(*(int *)crorArg % 7 == 0, 3);
+    printf("f1 yield end");
+    cror_await(&f2, &count);
+    printf("f1 await end, count = %d", *(int *)crorRes);
     if(count == 3)
     {
-        printf("count = 3");
-        os_task_await(&task2_handler, &count);
-        printf("c=%d task3(task2(count)) = %d", count, *(int *)os_res);
-    }
-    
-    if (count == 10)
-    {
-        os_task_return(&count);
+        cror_return(&count);
     }
 
-    os_task_end();
+    cror_end();
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    Task task1;
+    int i = 0;
+    Cror task1;
 
-    os_task_init(&task1, NULL, NULL, &task1_handler);
-
-    for (int i = 0; i < 100; i++)
+    cror_init(&task1, &f1, &i);
+    for (i = 0; i < 100; i++)
     {
-         if (i % 5 == 0)
+        cror_tick_trigger();
+        if(task1._return)
         {
-            os_task_resume(&task1);
-        }
-        if (task1._return)
-        {
-            printf("task1 return: %d\n", *(int *)task1._return);
-            task1._return = NULL;
+            printf("task1 return value = %d", *(int *)task1._return);
+            break;
         }
         printf("[%d]:", i);
-        os_task_run(&task1);
+        cror_run(&task1);
         printf("\n");
     }
-    return 0;
 }
