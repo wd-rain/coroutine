@@ -29,6 +29,7 @@ typedef struct cror_fn
         struct
         {
             unsigned char _started : 1;
+            unsigned char _righted : 1;
             unsigned char _nc : 7;
         } flag;
         unsigned char u8;
@@ -63,19 +64,23 @@ static inline void cror_run(Cror *task) {  if (task->_fn)  task->_fn->_handler(t
 #define cror_return(ret)         _cror_return(task, ret); return
 #define crorRes                  (task->_fn->_return)
 #define crorArg                  (task->_fn->_arg)
+#define crorRight                (task->_fn->_state.flag._righted)
 #if defined(__GNUC__)
 #define cror_begin()             do { if(task->_fn->_pc) goto *task->_fn->_pc; }while(0)
 #define cror_end();              task->_fn->_pc = 0;  
 #define cror_yield(why)          task->_fn->_pc = &&LABEL_CONCAT(L, __LINE__);  LABEL_CONCAT(L, __LINE__): if(!(why)) return
 #define cror_await(fn, arg)      task->_fn->_pc = &&LABEL_CONCAT(L, __LINE__); _cror_fn_call(task, fn, arg);  return; LABEL_CONCAT(L, __LINE__):
 #define cror_sleep(tick)         task->_fn->_tick = _crorGetTick(); task->_fn->_pc = &&LABEL_CONCAT(L, __LINE__); LABEL_CONCAT(L, __LINE__): if((_crorGetTick() - task->_fn->_tick) < tick) return;
-#define cror_timeout(why, tick)  task->_fn->_tick = _crorGetTick(); task->_fn->_pc = &&LABEL_CONCAT(L, __LINE__); LABEL_CONCAT(L, __LINE__): if(((_crorGetTick() - task->_fn->_tick) < tick) && (!(why))) return
+#define cror_timeout(why, tick)  task->_fn->_tick = _crorGetTick(); task->_fn->_pc = &&LABEL_CONCAT(L, __LINE__); LABEL_CONCAT(L, __LINE__): \
+                                 if(((_crorGetTick() - task->_fn->_tick) < tick)) { if((why))  task->_fn->_state.flag._righted = 1; else return;}else task->_fn->_state.flag._righted = 0
+
 #else
 #define cror_begin();            switch (task->_fn->_pc) { case 0:
 #define cror_end()               default: break; } task->_fn->_pc = 0
 #define cror_yield(why)          task->_fn->_pc = __LINE__; case __LINE__: if(!(why)) return
 #define cror_await(fn, arg);     task->_fn->_pc = __LINE__; _cror_fn_call(task, fn, arg);  return; case __LINE__:
 #define cror_sleep(tick)         task->_fn->_tick = _crorGetTick(); task->_fn->_pc = __LINE__; case __LINE__: if((_crorGetTick() - task->_fn->_tick) < tick) return
-#define cror_timeout(why, tick)  task->_fn->_tick = _crorGetTick(); task->_fn->_pc = __LINE__; case __LINE__: if(((_crorGetTick() - task->_fn->_tick) < tick) && (!(why))) return
+#define cror_timeout(why, tick)  task->_fn->_tick = _crorGetTick(); task->_fn->_pc = __LINE__; case __LINE__: \
+                                 if(((_crorGetTick() - task->_fn->_tick) < tick)) { if((why))  task->_fn->_state.flag._righted = 1; else return;}else task->_fn->_state.flag._righted = 0
 
 #endif

@@ -55,6 +55,10 @@ AsyncFn(f1)
 
     printf("f1 begin and count++ = %d", ++count);
     cror_timeout(*(int *)crorArg % 7 == 0, 3);
+    if(!crorRight)
+    {
+        printf("f1 timeout\n");
+    }
     printf("f1 yield end");
     cror_await(&f2, &count);
     printf("f1 await end, count = %d", *(int *)crorRes);
