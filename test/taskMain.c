@@ -3,89 +3,89 @@
 
 AsyncFn(f3)
 {
-    cror_var_def_begin();
+    coro_var_def_begin();
     static int x;
-    cror_var_def_end();
+    coro_var_def_end();
 
-    cror_begin();
+    coro_begin();
     printf("f3 begin");
-    cror_var_init_begin();
-    x = *(int*)crorArg*10;
-    cror_var_init_end();
+    coro_var_init_begin();
+    x = *(int*)coroArg*10;
+    coro_var_init_end();
     
-    cror_sleep(3);
+    coro_sleep(3);
     printf("f3 end");
-    cror_return(&x);
+    coro_return(&x);
 
-    cror_end();
+    coro_end();
 }
 
 AsyncFn(f2)
 {
-    cror_var_def_begin();
+    coro_var_def_begin();
     static int x;
-    cror_var_def_end();
+    coro_var_def_end();
 
-    cror_begin();
+    coro_begin();
     printf("f2 begin");
-    cror_var_init_begin();
-    x = *(int*)crorArg*10;
-    cror_var_init_end();
+    coro_var_init_begin();
+    x = *(int*)coroArg*10;
+    coro_var_init_end();
 
-    cror_await(&f3, &x);
-    x = *(int*)crorRes;
+    coro_await(&f3, &x);
+    x = *(int*)coroRes;
     printf("f2 end");
-    cror_return(&x);
+    coro_return(&x);
 
-    cror_end();
+    coro_end();
 }
 
 
 
 AsyncFn(f1)
 {
-    cror_var_def_begin();
+    coro_var_def_begin();
     static int count;
-    cror_var_def_end();
+    coro_var_def_end();
 
-    cror_begin();
-    cror_var_init_begin();
+    coro_begin();
+    coro_var_init_begin();
     count = 0;
-    cror_var_init_end();
+    coro_var_init_end();
 
     printf("f1 begin and count++ = %d", ++count);
-    cror_timeout(*(int *)crorArg % 7 == 0, 3);
-    if(!crorRight)
+    coro_timeout(*(int *)coroArg % 7 == 0, 3);
+    if(!coroRight)
     {
         printf("f1 timeout\n");
     }
     printf("f1 yield end");
-    cror_await(&f2, &count);
-    printf("f1 await end, count = %d", *(int *)crorRes);
+    coro_await(&f2, &count);
+    printf("f1 await end, count = %d", *(int *)coroRes);
     if(count == 3)
     {
-        cror_return(&count);
+        coro_return(&count);
     }
 
-    cror_end();
+    coro_end();
 }
 
 int main(void)
 {
     int i = 0;
-    Cror task1;
+    Coro task1;
 
-    cror_init(&task1, &f1, &i);
+    coro_init(&task1, &f1, &i);
     for (i = 0; i < 100; i++)
     {
-        cror_tick_trigger();
+        coro_tick_trigger();
         if(task1._return)
         {
             printf("task1 return value = %d", *(int *)task1._return);
             break;
         }
         printf("[%d]:", i);
-        cror_run(&task1);
+        coro_run(&task1);
         printf("\n");
     }
 }

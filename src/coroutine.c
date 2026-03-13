@@ -1,9 +1,9 @@
 #include "coroutine.h"
 #include <stdio.h>
 
-static CrorTick _crorTick = 0;
+static CoroTick _coroTick = 0;
 
-void _cror_fn_reset(CrorFn *fn)
+void _coro_fn_reset(CoroFn *fn)
 {
     fn->_pc = 0;
     fn->_return = NULL;
@@ -11,73 +11,73 @@ void _cror_fn_reset(CrorFn *fn)
     fn->_prev = NULL;
 }
 
-void _cror_return(Cror *task, void *ret)
+void _coro_return(Coro *task, void *ret)
 {
     if (task->_fn->_prev)
     {
-        CrorFn *fn = task->_fn;
+        CoroFn *fn = task->_fn;
         task->_fn = task->_fn->_prev;
         task->_fn->_return = ret;
-        _cror_fn_reset(fn);
+        _coro_fn_reset(fn);
     }
     else
     {
-        _cror_fn_reset(task->_fn);
+        _coro_fn_reset(task->_fn);
         task->_fn = NULL;
         task->_return = ret;
     }
 }
 
-void _cror_fn_call(Cror *task, CrorFn *fn, void *arg)
+void _coro_fn_call(Coro *task, CoroFn *fn, void *arg)
 {
-    _cror_fn_reset(fn);
+    _coro_fn_reset(fn);
     fn->_arg = arg;
     fn->_prev = task->_fn;
     task->_fn = fn;
 }
 
-CrorTick _cror_defualt_get_tick(void)
+CoroTick _coro_defualt_get_tick(void)
 {
-    return _crorTick;
+    return _coroTick;
 }
 
 // public api
-CrorTickGet _crorGetTick = _cror_defualt_get_tick;
+CoroTickGet _coroGetTick = _coro_defualt_get_tick;
 
-void cror_tick_trigger(void)
+void coro_tick_trigger(void)
 {
-    _crorTick++;
+    _coroTick++;
 }
 
-void cror_tick_init(CrorTickGet getTick)
+void coro_tick_init(CoroTickGet getTick)
 {
-    _crorGetTick = getTick;
+    _coroGetTick = getTick;
 }
 
-void cror_reset(Cror *task)
+void coro_reset(Coro *task)
 {
     task->_return = NULL;
     task->_fn = task->_initFn;
-    _cror_fn_reset(task->_fn);
+    _coro_fn_reset(task->_fn);
 }
 
-void cror_close(Cror *task)
+void coro_close(Coro *task)
 {
     task->_fn = NULL;
 }
 
-void cror_open(Cror *task)
+void coro_open(Coro *task)
 {
     if (task->_fn == NULL)
     {
-        cror_reset(task);
+        coro_reset(task);
     }
 }
 
-void cror_init(Cror *task, CrorFn *fn, void *arg)
+void coro_init(Coro *task, CoroFn *fn, void *arg)
 {
     task->_initFn = fn;
-    cror_reset(task);
+    coro_reset(task);
     task->_fn->_arg = arg;
 }
 
