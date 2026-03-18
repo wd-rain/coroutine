@@ -1,5 +1,10 @@
 #pragma once
 
+
+// CoroTick
+typedef unsigned int CoroTick;              // 协程时间数据类型
+
+// Coro 协程的最小单元
 #ifndef NULL
 #define NULL 0
 #endif
@@ -15,7 +20,6 @@ typedef unsigned short Lc;
 typedef void (*CoroHandlerFn)(Coro *task);
 typedef void (*CoroInitFn)(void);
 typedef void (*CoroDeInitFn)(void);
-typedef unsigned int CoroTick;
 typedef CoroTick (*CoroTickGet)(void);
 
 typedef struct coro_fn
@@ -30,7 +34,7 @@ typedef struct coro_fn
         {
             unsigned char _started : 1;
             unsigned char _righted : 1;
-            unsigned char _nc : 7;
+            unsigned char _nc : 6;
         } flag;
         unsigned char u8;
     } _state;
@@ -48,6 +52,8 @@ typedef struct coro
 void _coro_fn_call(Coro *task, CoroFn *fn, void *arg);
 void _coro_return(Coro *task, void *ret);
 extern CoroTickGet _coroGetTick;
+
+
 void coro_tick_trigger(void);
 void coro_tick_init(CoroTickGet getTick);
 void coro_reset(Coro *task);
@@ -65,6 +71,7 @@ static inline void coro_run(Coro *task) {  if (task->_fn)  task->_fn->_handler(t
 #define coroRes                  (task->_fn->_return)
 #define coroArg                  (task->_fn->_arg)
 #define coroRight                (task->_fn->_state.flag._righted)
+#define coroFnExtern(name)       extern CoroFn name
 #if defined(__GNUC__)
 #define coro_begin()             do { if(task->_fn->_pc) goto *task->_fn->_pc; }while(0)
 #define coro_end();              task->_fn->_pc = 0;  
@@ -73,7 +80,6 @@ static inline void coro_run(Coro *task) {  if (task->_fn)  task->_fn->_handler(t
 #define coro_sleep(tick)         task->_fn->_tick = _coroGetTick(); task->_fn->_pc = &&LABEL_CONCAT(L, __LINE__); LABEL_CONCAT(L, __LINE__): if((_coroGetTick() - task->_fn->_tick) < tick) return;
 #define coro_timeout(why, tick)  task->_fn->_tick = _coroGetTick(); task->_fn->_pc = &&LABEL_CONCAT(L, __LINE__); LABEL_CONCAT(L, __LINE__): \
                                  if(((_coroGetTick() - task->_fn->_tick) < tick)) { if((why))  task->_fn->_state.flag._righted = 1; else return;}else task->_fn->_state.flag._righted = 0
-
 #else
 #define coro_begin();            switch (task->_fn->_pc) { case 0:
 #define coro_end()               default: break; } task->_fn->_pc = 0
@@ -83,4 +89,8 @@ static inline void coro_run(Coro *task) {  if (task->_fn)  task->_fn->_handler(t
 #define coro_timeout(why, tick)  task->_fn->_tick = _coroGetTick(); task->_fn->_pc = __LINE__; case __LINE__: \
                                  if(((_coroGetTick() - task->_fn->_tick) < tick)) { if((why))  task->_fn->_state.flag._righted = 1; else return;}else task->_fn->_state.flag._righted = 0
 
+
+
+
+                                 
 #endif

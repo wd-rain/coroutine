@@ -53,15 +53,15 @@ AsyncFn(f1)
     count = 0;
     coro_var_init_end();
 
-    printf("f1 begin and count++ = %d", ++count);
+    printf("f1 begin and count++ = %d\n", ++count);
     coro_timeout(*(int *)coroArg % 7 == 0, 3);
     if(!coroRight)
     {
         printf("f1 timeout\n");
     }
-    printf("f1 yield end");
+    printf("f1 yield end\n");
     coro_await(&f2, &count);
-    printf("f1 await end, count = %d", *(int *)coroRes);
+    printf("f1 await end, count = %d\n", *(int *)coroRes);
     if(count == 3)
     {
         coro_return(&count);

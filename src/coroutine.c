@@ -1,8 +1,27 @@
 #include "coroutine.h"
 #include <stdio.h>
 
+// Coro Tick
+CoroTick _coro_defualt_get_tick(void);
 static CoroTick _coroTick = 0;
+CoroTickGet _coroGetTick = _coro_defualt_get_tick;
 
+void coro_tick_trigger(void)
+{
+    _coroTick++;
+}
+
+CoroTick _coro_defualt_get_tick(void)
+{
+    return _coroTick;
+}
+
+void coro_tick_init(CoroTickGet getTick)
+{
+    _coroGetTick = getTick;
+}
+
+// Coro Fn
 void _coro_fn_reset(CoroFn *fn)
 {
     fn->_pc = 0;
@@ -36,24 +55,8 @@ void _coro_fn_call(Coro *task, CoroFn *fn, void *arg)
     task->_fn = fn;
 }
 
-CoroTick _coro_defualt_get_tick(void)
-{
-    return _coroTick;
-}
 
-// public api
-CoroTickGet _coroGetTick = _coro_defualt_get_tick;
-
-void coro_tick_trigger(void)
-{
-    _coroTick++;
-}
-
-void coro_tick_init(CoroTickGet getTick)
-{
-    _coroGetTick = getTick;
-}
-
+// Coro
 void coro_reset(Coro *task)
 {
     task->_return = NULL;
